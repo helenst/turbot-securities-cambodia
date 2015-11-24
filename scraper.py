@@ -18,6 +18,15 @@ def strip_whitespace(text):
     return text.strip(string.whitespace + u'\u200b\u00a0')
 
 
+def normalize_key(key):
+    if key == 'web':
+        return 'website'
+    elif key == 'e-mail':
+        return 'email'
+    else:
+        return key
+
+
 class Page(object):
     def __init__(self, url):
         self._url = url
@@ -36,7 +45,7 @@ class Page(object):
             turbotlib.log("Scraping {}...".format(self._url))
             html = requests.get(self._url).content
         else:
-            html = open('settlement.html').read()
+            html = open('source.html').read()
 
         doc = BeautifulSoup(html)
         self._page_title = normalize_whitespace(doc.find('h2').text)
@@ -84,7 +93,7 @@ class Page(object):
             parts = map(strip_whitespace, line.split(':'))
             if len(parts) == 2:
                 if parts[0]:
-                    key = parts[0].lower()
+                    key = normalize_key(parts[0].lower())
                 value = parts[1]
             else:
                 value = strip_whitespace(line)
