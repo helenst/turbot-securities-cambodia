@@ -15,7 +15,7 @@ def normalize_whitespace(text):
 
 
 def strip_whitespace(text):
-    return text.strip(string.whitespace + u'\u200b')
+    return text.strip(string.whitespace + u'\u200b\u00a0')
 
 
 class Page(object):
