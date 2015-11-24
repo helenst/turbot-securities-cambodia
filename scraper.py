@@ -89,13 +89,18 @@ class Page(object):
             info[key].append(value)
         return info
 
+FETCH_REAL_DATA = True
 
-#SOURCE_URL = 'http://www.secc.gov.kh/english/m52.php?pn=6'
-SOURCE_URL = 'http://www.secc.gov.kh/english/m511.php?pn=6'
-FETCH_REAL_DATA = False
+ids = ['m52', 'm51', 'm511', 'm512']
+
+urls = [
+    'http://www.secc.gov.kh/english/{}.php?pn=6'.format(id_)
+    for id_ in ids
+]
+
+for url in urls:
+    for row in Page(url).process():
+        print json.dumps(row)
 
 #page = Page(SOURCE_URL)
 #page.capture('settlement.html')
-
-for row in Page(SOURCE_URL).process():
-    print json.dumps(row)
