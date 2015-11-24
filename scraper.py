@@ -6,7 +6,6 @@ import re
 import requests
 import string
 import turbotlib
-from itertools import count
 from bs4 import BeautifulSoup
 
 
@@ -68,7 +67,6 @@ class Page(object):
         name_cell, contact_cell = row.find_all('td')[-2:]
         name = normalize_whitespace(name_cell.text)
         info = {
-            'number': counter.next(),
             'name': name,
             'type': self._page_title,
             'category': self._current_category,
@@ -111,7 +109,6 @@ urls = [
     for id_ in ids
 ]
 
-counter = count()
 for url in urls:
     for row in Page(url).process():
         print json.dumps(row)
