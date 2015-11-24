@@ -20,7 +20,8 @@ def strip_whitespace(text):
 class Page(object):
     def __init__(self, url):
         self._url = url
-        self._current_category = None
+        self._current_category = ''
+        self._page_title = ''
 
     def capture(self, filename):
         """
@@ -37,6 +38,7 @@ class Page(object):
             html = open('settlement.html').read()
 
         doc = BeautifulSoup(html)
+        self._page_title = normalize_whitespace(doc.find('h2').text)
         rows = doc.find(class_='market_participant').table.find_all('tr')
 
         return self.process_rows(rows)
@@ -57,6 +59,7 @@ class Page(object):
         info = {
             'number': number,
             'name': name,
+            'type': self._page_title,
             'category': self._current_category,
             'sample_date': datetime.datetime.now().isoformat(),
             'source_url': self._url,
