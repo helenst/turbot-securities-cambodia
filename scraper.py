@@ -14,11 +14,12 @@ def normalize(text):
     return " ".join(token.strip() for token in text.split())
 
 
-def process_entry(row, category):
+def process_entry(row, category, number):
     name_cell, contact_cell = row.find_all('td')
     name = normalize(name_cell.text)
     lines = filter(None, contact_cell.text.split('\r\n'))
     info = {
+        'number': number,
         'name': name,
         'category': category,
         'address': normalize(lines[0]),
@@ -28,7 +29,6 @@ def process_entry(row, category):
     for line in lines[1:]:
         parts = [item.strip() for item in line.split(':')]
         if len(parts) == 2:
-            # save the last key
             if parts[0]:
                 key = parts[0].lower()
             value = parts[1]
@@ -42,21 +42,26 @@ def process_entry(row, category):
 
 def process_rows(rows):
     category = None
-    for row in rows:
+    for number, row in enumerate(rows):
         if row.find(class_='h_title'):
             pass
         elif row.find(class_='h_title2'):
             category = normalize(row.text)
         else:
-            print json.dumps(process_entry(row, category))
+            print json.dumps(process_entry(row, category, number))
 
 
-if FETCH_REAL_DATA:
-    turbotlib.log("Scraping {}...".format(SOURCE_URL))
-    html = requests.get(SOURCE_URL).content
-else:
-    html = open('source.html').read()
+def process_page(url):
+    if FETCH_REAL_DATA:
+        turbotlib.log("Scraping {}...".format(url))
+        html = requests.get(url).content
+    else:
+        html = open('source.html').read()
 
-doc = BeautifulSoup(html)
-rows = doc.find(class_='market_participant').table.find_all('tr')
-process_rows(rows)
+    doc = BeautifulSoup(html)
+    rows = doc.find(class_='market_participant').table.find_all('tr')
+    process_rows(rows)
+
+
+
+process_page(SOURCE_URL)
