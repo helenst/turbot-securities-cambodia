@@ -2,16 +2,19 @@
 
 import json
 import datetime
+import re
 import requests
+import string
 import turbotlib
 from bs4 import BeautifulSoup
 
-SOURCE_URL = 'http://www.secc.gov.kh/english/m52.php?pn=6'
-FETCH_REAL_DATA = False
+
+def normalize_whitespace(text):
+    return " ".join(map(strip_whitespace, text.split()))
 
 
-def normalize(text):
-    return " ".join(token.strip() for token in text.split())
+def strip_whitespace(text):
+    return text.strip(string.whitespace + u'\u200b')
 
 
 class Page(object):
@@ -19,19 +22,19 @@ class Page(object):
         self._url = url
         self._current_category = None
 
-    def capture(self):
+    def capture(self, filename):
         """
         capture contents of the page to html file
         """
         html = requests.get(self._url).content
-        open('source.html', 'w').write(html)
+        open(filename, 'w').write(html)
 
     def process(self):
         if FETCH_REAL_DATA:
             turbotlib.log("Scraping {}...".format(self._url))
             html = requests.get(self._url).content
         else:
-            html = open('source.html').read()
+            html = open('settlement.html').read()
 
         doc = BeautifulSoup(html)
         rows = doc.find(class_='market_participant').table.find_all('tr')
@@ -43,13 +46,14 @@ class Page(object):
             if row.find(class_='h_title'):
                 pass
             elif row.find(class_='h_title2'):
-                self._current_category = normalize(row.text)
+                self._current_category = normalize_whitespace(row.text)
             else:
                 yield self.process_entry(row, number)
 
     def process_entry(self, row, number):
-        name_cell, contact_cell = row.find_all('td')
-        name = normalize(name_cell.text)
+        cells = row.find_all('td')[-2:]
+        name_cell, contact_cell = cells
+        name = normalize_whitespace(name_cell.text)
         info = {
             'number': number,
             'name': name,
@@ -61,23 +65,34 @@ class Page(object):
         return info
 
     def process_contact_info(self, cell):
-        lines = filter(None, cell.text.split('\r\n'))
+        lines = map(
+            strip_whitespace,
+            re.split('[\r\n]+', cell.text, re.UNICODE)
+        )
+        lines = filter(None, lines)
         info = {
-            'address': normalize(lines[0]),
+            'address': normalize_whitespace(lines[0]),
         }
         for line in lines[1:]:
-            parts = [item.strip() for item in line.split(':')]
+            parts = map(strip_whitespace, line.split(':'))
             if len(parts) == 2:
                 if parts[0]:
                     key = parts[0].lower()
                 value = parts[1]
             else:
-                value = line.strip()
+                value = strip_whitespace(line)
 
             info.setdefault(key, [])
             info[key].append(value)
         return info
 
+
+#SOURCE_URL = 'http://www.secc.gov.kh/english/m52.php?pn=6'
+SOURCE_URL = 'http://www.secc.gov.kh/english/m511.php?pn=6'
+FETCH_REAL_DATA = False
+
+#page = Page(SOURCE_URL)
+#page.capture('settlement.html')
 
 for row in Page(SOURCE_URL).process():
     print json.dumps(row)
