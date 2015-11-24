@@ -6,6 +6,7 @@ import re
 import requests
 import string
 import turbotlib
+from itertools import count
 from bs4 import BeautifulSoup
 
 
@@ -20,8 +21,8 @@ def strip_whitespace(text):
 class Page(object):
     def __init__(self, url):
         self._url = url
-        self._current_category = ''
         self._page_title = ''
+        self._current_category = ''
 
     def capture(self, filename):
         """
@@ -44,20 +45,21 @@ class Page(object):
         return self.process_rows(rows)
 
     def process_rows(self, rows):
-        for number, row in enumerate(rows, 1):
+        for row in rows:
             if row.find(class_='h_title'):
                 pass
             elif row.find(class_='h_title2'):
                 self._current_category = normalize_whitespace(row.text)
             else:
-                yield self.process_entry(row, number)
+                yield self.process_entry(row)
 
-    def process_entry(self, row, number):
-        cells = row.find_all('td')[-2:]
-        name_cell, contact_cell = cells
+    def process_entry(self, row):
+        # Only look at the last two cells
+        # (There might be a first cell with a logo)
+        name_cell, contact_cell = row.find_all('td')[-2:]
         name = normalize_whitespace(name_cell.text)
         info = {
-            'number': number,
+            'number': counter.next(),
             'name': name,
             'type': self._page_title,
             'category': self._current_category,
@@ -73,6 +75,8 @@ class Page(object):
             re.split('[\r\n]+', cell.text, re.UNICODE)
         )
         lines = filter(None, lines)
+
+        # First line is always address
         info = {
             'address': normalize_whitespace(lines[0]),
         }
@@ -98,6 +102,7 @@ urls = [
     for id_ in ids
 ]
 
+counter = count()
 for url in urls:
     for row in Page(url).process():
         print json.dumps(row)
