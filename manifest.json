@@ -1,20 +1,21 @@
 {
   "bot_id": "cambodia_securities",
-  "title": "My simple bot",
-  "description": "This is a simple bot",
+  "title": "Securities and Exchange Commission of Cambodia",
+  "description": "Bot for scraping Securities and Exchange Commission data at http://www.secc.gov.kh/english/m51.php?pn=6",
   "language": "python",
   "data_type": "primary data",
   "identifying_fields": [
-    "number"
+    "name",
+    "source_url"
   ],
   "files": [
     "scraper.py"
   ],
   "frequency": "monthly",
   "publisher": {
-    "name": "Publisher of the data",
-    "url": "Publisher's website",
-    "terms": "Copyright terms (e.g. Open Government License, n/a, etc)",
-    "terms_url": "A place where these terms can be checked or verified"
+    "name": "Securities and Exchange Commission of Cambodia",
+    "url": "http://www.secc.gov.kh/",
+    "terms": "n/a",
+    "terms_url": "n/a"
   }
 }
