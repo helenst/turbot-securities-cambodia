@@ -27,24 +27,25 @@ def normalize_key(key):
 
 
 class Page(object):
-    def __init__(self, url):
-        self._url = url
+    def __init__(self, page_id):
+        self._page_id = page_id
         self._page_title = ''
         self._current_category = ''
 
-    def capture(self, filename):
-        """
-        capture contents of the page to html file
-        """
-        html = requests.get(self._url).content
-        open(filename, 'w').write(html)
+    @property
+    def url(self):
+        return 'http://www.secc.gov.kh/english/{}.php?pn=6'.format(self._page_id)
+
+    @property
+    def filename(self):
+        return 'data/{}.php?pn=6'.format(self._page_id)
 
     def process(self):
         if FETCH_REAL_DATA:
-            turbotlib.log("Scraping {}...".format(self._url))
-            html = requests.get(self._url).content
+            turbotlib.log("Scraping {}...".format(self.url))
+            html = requests.get(self.url).content
         else:
-            html = open('source.html').read()
+            html = open(self.filename).read()
 
         doc = BeautifulSoup(html)
         self._page_title = normalize_whitespace(doc.find('h2').text)
@@ -71,7 +72,7 @@ class Page(object):
             'type': self._page_title,
             'category': self._current_category,
             'sample_date': datetime.datetime.now().isoformat(),
-            'source_url': self._url,
+            'source_url': self.url,
         }
         info.update(self.process_contact_info(contact_cell))
         return info
@@ -100,18 +101,10 @@ class Page(object):
             info[key].append(value)
         return info
 
-FETCH_REAL_DATA = True
+FETCH_REAL_DATA = False
 
 ids = ['m52', 'm51', 'm511', 'm512']
 
-urls = [
-    'http://www.secc.gov.kh/english/{}.php?pn=6'.format(id_)
-    for id_ in ids
-]
-
-for url in urls:
-    for row in Page(url).process():
+for page_id in ids:
+    for row in Page(page_id).process():
         print json.dumps(row)
-
-#page = Page(SOURCE_URL)
-#page.capture('settlement.html')
