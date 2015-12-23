@@ -9,8 +9,14 @@
     "source_url"
   ],
   "files": [
-    "scraper.py"
+    "scraper.py",
+    "licence_transformer.py"
   ],
+  "transformers": [{
+    "file":  "licence_transformer.py",
+    "data_type": "licence",
+    "identifying_fields": ["source_url", "licence_holder.entity_properties.name"]
+  }],
   "frequency": "monthly",
   "publisher": {
     "name": "Securities and Exchange Commission of Cambodia",
