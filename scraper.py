@@ -27,18 +27,18 @@ def normalize_key(key):
 
 
 class Page(object):
-    def __init__(self, page_id):
-        self._page_id = page_id
-        self._page_title = ''
-        self._current_category = ''
+    def __init__(self, page_id, page_title):
+        self.page_id = page_id
+        self.page_title = page_title
+        self.current_category = ''
 
     @property
     def url(self):
-        return 'http://www.secc.gov.kh/english/{}.php?pn=6'.format(self._page_id)
+        return 'http://www.secc.gov.kh/english/{}.php?pn=6'.format(self.page_id)
 
     @property
     def filename(self):
-        return 'data/{}.php?pn=6'.format(self._page_id)
+        return 'data/{}.php?pn=6'.format(self.page_id)
 
     def process(self):
         if FETCH_REAL_DATA:
@@ -48,7 +48,6 @@ class Page(object):
             html = open(self.filename).read()
 
         doc = BeautifulSoup(html)
-        self._page_title = normalize_whitespace(doc.find('h2').text)
         rows = doc.find(class_='market_participant').table.find_all('tr')
 
         return self.process_rows(rows)
@@ -58,9 +57,16 @@ class Page(object):
             if row.find(class_='h_title'):
                 pass
             elif row.find(class_='h_title2'):
-                self._current_category = normalize_whitespace(row.text)
+                self.current_category = normalize_whitespace(row.text)
             else:
                 yield self.process_entry(row)
+
+    @property
+    def operator_type(self):
+        if self.current_category:
+            return ' - '.join((self.page_title, self.current_category))
+        else:
+            return self.page_title
 
     def process_entry(self, row):
         # Only look at the last two cells
@@ -69,8 +75,7 @@ class Page(object):
         name = normalize_whitespace(name_cell.text)
         info = {
             'name': name,
-            'type': self._page_title,
-            'category': self._current_category,
+            'type': self.operator_type,
             'sample_date': datetime.datetime.now().isoformat(),
             'source_url': self.url,
         }
@@ -101,10 +106,15 @@ class Page(object):
             info[key].append(value)
         return info
 
-FETCH_REAL_DATA = False
+FETCH_REAL_DATA = True
 
-ids = ['m52', 'm51', 'm511', 'm512']
+pages = [
+    ('m52', 'Intermediaries'),
+    ('m51', 'Market Operators'),
+    ('m511', 'Cash Settlement Agent'),
+    ('m512', 'Securities Registrar, Transfer Agent & Paying Agent'),
+]
 
-for page_id in ids:
-    for row in Page(page_id).process():
+for page_id, title in pages:
+    for row in Page(page_id, title).process():
         print json.dumps(row)
