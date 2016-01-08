@@ -15,7 +15,10 @@
   "transformers": [{
     "file":  "licence_transformer.py",
     "data_type": "licence",
-    "identifying_fields": ["source_url", "licence_holder.entity_properties.name"]
+    "identifying_fields": [
+      "permissions",
+      "licence_holder.entity_properties.name"
+    ]
   }],
   "frequency": "monthly",
   "publisher": {
