@@ -6,7 +6,7 @@
   "data_type": "primary data",
   "identifying_fields": [
     "name",
-    "source_url"
+    "type"
   ],
   "files": [
     "scraper.py",
